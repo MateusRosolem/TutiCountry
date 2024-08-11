@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tuti Country</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Futura&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="script.js"></script>
+  </head>
+
+
+  <body>
+    <main>
+      <div class="header-container">
+        <header role="header" class="header-primary-container">
+          <div class="container">
+            <div class="wrapper-container">
+              <div class="header-wrapper">
+                <div class="number-wrapper">
+                    <h2>
+                      <a
+                        href="https://wa.me/5544999292404?text=Ol%C3%A1!%20%F0%9F%91%8B%0A%0AAcabei%20de%20visitar%20o%20site%20da%20Tuti%20Country.%20Gostaria%20de%20saber%20mais%20sobre%20algum%20produto%2Fservi%C3%A7o%20espec%C3%ADfico%20e%20ver%20se%20h%C3%A1%20alguma%20recomenda%C3%A7%C3%A3o%20ou%20oferta%20especial%20dispon%C3%ADvel.%0A%0AAgrade%C3%A7o%20desde%20j%C3%A1%20pela%20aten%C3%A7%C3%A3o%20e%20estou%20ansioso(a)%20para%20receber%20sua%20resposta!"
+                        ><i class="fa-brands fa-whatsapp"></i> +55 (44) 9 9929-2404
+                      </a>
+                    </h2>
+                    <h2>Televendas (44) 3055-4211</h2>
+                </div>
+                <div class="logo-wrapper">
+                  <a
+                    href="tuticountry.com.br"
+                    ><img
+                      src="Logo/svgexport-34.svg"
+                  /></a>
+                </div>
+                <div class="search-container">
+                  <form class="search-form" action="/search" method="get">
+                    <input
+                      type="search"
+                      id="search"
+                      name="search"
+                      placeholder="Encontre um produto"
+                      autocomplete="on"
+                    />
+                    <button class="search-button" type="submit" value="Pesquisar"><i class="fas fa-search "></i></button>
+                  </form>
+                </div>
+                <!-- Ícone de Login -->
+                <a href=""><i class="fas fa-user icon"></i></a>
+
+                <!-- Ícone de Coração -->
+                <a href=""><i class="fas fa-heart icon"></i></a>
+
+                <!-- Ícone de Carrinho -->
+                <a href=""><i class="fas fa-shopping-cart icon"></i></a>
+
+              </div>
+            </div>
+          </div>
+        </header>
+        <div class="nav-container">
+          <div class="container">
+            <nav>
+              <ul>
+                <li>Homens</li>
+                <li>Mulheres</li>
+                <li>Coleções</li>
+                <li>Outlet</li>
+                <li>Blog</li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <div class="main-container">
+        <img src="Logo/svgexport-34.svg" style="height: 500px; width: auto" />
+      </div>
+    </main>
+
+<nav id="menuFixo" class="fixo" style="top: 0px">
+    <div class="menu-container">
+        <div class="logo-wrapper-fixo">
+            <a href="https://tuticountry.com.br/">
+                <img
+                src="Logo/svgexport-34.svg"
+                title="Tuti Country Modas"
+                alt="Tuti Country Modas"
+                class="img-responsive"
+            /></a>
+        </div>
+        <div class="search-container-fixo">
+            <form class="search-form-fixo" action="/search" method="get">
+            <input
+                type="search"
+                id="search"
+                name="search"
+                placeholder="Encontre um produto"
+                autocomplete="on"
+            />
+            <button class="search-button-fixo" type="submit" value="Pesquisar"><i class="fas fa-search "></i></button>
+            </form>
+        </div>
+    </div>
+    <!-- <ul class="search-wrapper hidden-xs">
+        <div id="search" class="input-group open search-container" style="z-index: 10000">
+        <div class="input-group">
+            <input
+            type="text"
+            name="search"
+            value=""
+            placeholder="O que você procura?"
+            class="form-control input-lg"
+            autocomplete="off"
+            />
+            <ul class="dropdown-menu search-autocomplete"></ul>
+            <span class="input-group-btn addon">
+            <button
+                type="button"class="btn btn-default btn-lg icon-search">
+                <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 56.966 56.966"
+                >
+                <path
+                    d="M55.146 51.887L41.588 37.786A22.926 22.926 0 0 0 46.984 23c0-12.682-10.318-23-23-23s-23 10.318-23 23 10.318 23 23 23c4.761 0 9.298-1.436 13.177-4.162l13.661 14.208c.571.593 1.339.92 2.162.92.779 0 1.518-.297 2.079-.837a3.004 3.004 0 0 0 .083-4.242zM23.984 6c9.374 0 17 7.626 17 17s-7.626 17-17 17-17-7.626-17-17 7.626-17 17-17z"
+                    fill="#fff"
+                ></path>
+                </svg>
+            </button>
+            </span>
+        </div>
+        </div>
+    </ul>
+
+    <ul class="quotation-wrapper hidden"></ul>
+
+    <ul class="cart-wrapper">
+        <div id="cart" class="btn-group btn-block">
+        <button
+            type="button"
+            data-toggle="dropdown"
+            class="btn btn-default btn-lg dropdown-toggle"
+        >
+            <div class="shopping-cart"></div>
+            <span id="cart-total" data-quantity-items="0">0</span>
+        </button>
+        <ul class="dropdown-menu pull-right scroll">
+            <li style="max-height: 561.005px">
+            <p class="text-center">Seu carrinho está vazio!</p>
+            </li>
+        </ul>
+        </div>
+    </ul> 
+    </div>-->
+
+</nav>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="promotions">
+    <h2>Promoções</h2>
+    <div class="product-grid">
+        <div class="product">
+            <img src="bota1.png" alt="Bota Feminina Vimar Caramelo">
+            <p>Bota Feminina Vimar Caramelo</p>
+            <p>R$ 499,00</p>
+        </div>
+        <div class="product">
+            <img src="bota2.png" alt="Bota Feminina Vimar Caramelo">
+            <p>Bota Feminina Vimar Caramelo</p>
+            <p>R$ 499,00</p>
+        </div>
+        <div class="product">
+            <img src="bota3.png" alt="Bota Feminina Vimar Marfim">
+            <p>Bota Feminina Vimar Marfim</p>
+            <p>R$ 499,00</p>
+        </div>
+        <div class="product">
+            <img src="bota4.png" alt="Bota Feminina Vimar Neon Preto">
+            <p>Bota Feminina Vimar Neon Preto</p>
+            <p>R$ 499,00</p>
+        </div>
+    </div>
+</div>
+
+<div class="featured">
+    <h2>Produtos em Destaque</h2>
+    <div class="product-grid">
+        <div class="product">
+            <img src="jeans1.png" alt="Calça Masculina King Farm">
+            <p>Calça Masculina King Farm</p>
+            <p>R$ 210,00</p>
+        </div>
+        <div class="product">
+            <img src="jeans2.png" alt="Calça Masculina Cinch Green">
+            <p>Calça Masculina Cinch Green</p>
+            <p>R$ 425,00</p>
+        </div>
+        <div class="product">
+            <img src="jeans3.png" alt="Calça Masculina All Hunter">
+            <p>Calça Masculina All Hunter</p>
+            <p>R$ 280,00</p>
+        </div>
+        <div class="product">
+            <img src="jeans4.png" alt="Calça Masculina All Hunter">
+            <p>Calça Masculina All Hunter</p>
+            <p>R$ 240,00</p>
+        </div>
+    </div>
+</div>
+
+<div class="bestsellers">
+    <h2>Mais Vendidos</h2>
+    <div class="product-grid">
+        <div class="product">
+            <img src="jeans5.png" alt="Calça Masculina King Farm">
+            <p>Calça Masculina King Farm</p>
+            <p>R$ 190,00</p>
+        </div>
+        <div class="product">
+            <img src="negociacao.png" alt="Negociação por E-mail">
+            <p>Negociação por E-mail</p>
+            <p>R$ 410,00</p>
+        </div>
+        <div class="product">
+            <img src="bota5.png" alt="Boot Tênis Country">
+            <p>Boot Tênis Country</p>
+            <p>R$ 395,00</p>
+        </div>
+        <div class="product">
+            <img src="jeans6.png" alt="Calça Masculina King Farm">
+            <p>Calça Masculina King Farm</p>
+            <p>R$ 190,00</p>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <footer class="footer-container">
+    <div class="footer-newsletter">inscreva-se
+            <p>Inscreva-se em nossa Newsletter</p>
+        <input type="text" placeholder="Nome completo">
+        <input type="email" placeholder="E-mail">
+        <label><input type="radio" name="gender" value="masculino"> Masculino</label>
+        <label><input type="radio" name="gender" value="feminino"> Feminino</label>
+         <button>Enviar</button>
+    </div>
+    <div class="footer-primary-container">Sobre nos
+        <p>Informações: Quem Somos | Compra Segura | Dúvidas Frequentes | Formas de Pagamentos | Formas de Envio | Trocas e Devoluções | Contato | Mapa do site</p>
+        <p>Empresa: Tuti Country Modas Ltda. - Epp. | CNPJ: 78.825.084/0001-80</p>
+        <p>Endereço: Avenida Paraná, 4488 - Zona 4 | CEP: 87501-030 | Umuarama - Paraná</p>
+        <p>Telefone: (44) 3053-4211 | (44) 9 9929-2404 | E-mail: contato@tuticountry.com.br</p>
+        <p>Copyright © 2024 - Tuti Country Modas Ltda. - Epp. Todos os direitos reservados.</p>
+    </div>
+      <div class="footer-secondary-container">
+        <hr />
+        formas de pagamento/entrega
+      </div>
+    </footer>
+  </body>
+</html>

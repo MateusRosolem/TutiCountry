@@ -1,0 +1,113 @@
+/* -- Stylesheet -- */
+
+#module-instagram {
+    margin-bottom: 30px;
+}
+
+#module-instagram .container {
+    padding: 30px 0;
+}
+
+#module-instagram .slick-controls .slider-left, #module-instagram .slick-controls .slider-right {
+    /*background: #009BDB;*/
+    padding: 0 7px;
+    text-align: center;
+    /*color: white;*/
+    float: left;
+}
+
+#module-instagram .slick-controls .slider-left + .pointer, #module-instagram .slick-controls .slider-right + .pointer {
+    margin-left: 5px;
+}
+
+#module-instagram .slick-controls .slider-left .fa, #module-instagram .slick-controls .slider-right .fa {
+    font-size: 23px;
+}
+
+#module-instagram p {
+    font-size: 12px;
+}
+
+.instagram {
+    display: block;
+}
+
+.instagram .item {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.instagram .item img {
+    width: 100%;
+}
+
+.instagram .item a {
+    position: relative;
+    display: block;
+}
+
+.instagram .item.hover-on a:hover .fa:before {
+    -webkit-animation-name: hvr-pop;
+    animation-name: hvr-pop;
+    -webkit-animation-duration: 0.3s;
+    animation-duration: 0.3s;
+    -webkit-animation-timing-function: linear;
+    animation-timing-function: linear;
+    -webkit-animation-iteration-count: 1;
+    animation-iteration-count: 1;
+    opacity: 1;
+}
+
+.instagram .item.hover-on a:hover:before {
+    opacity: 1;
+    transform: all .3s linear 0s;
+}
+
+.instagram .item a:before {
+    display: inline-block;
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    font-size: 14px;
+    z-index: 1;
+    content: attr(data-like);
+
+    border-radius: 50px;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    left: 50%;
+    top: 50%;
+    font-weight: bold;
+    color: #444;
+
+    opacity: 0;
+}
+
+.instagram .item .fa:before {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+    font-size: 50px;
+    color: rgba(255, 255, 255, 0.9);
+    opacity: 0;
+}
+
+@-webkit-keyframes hvr-pop {
+    50% {
+        -webkit-transform: scale(1.2);
+        transform: scale(1.2);
+    }
+}
+
+@keyframes hvr-pop {
+    50% {
+        -webkit-transform: scale(1.2);
+        transform: scale(1.2);
+    }
+}
+
+h1 .entry, a .entry {
+    display: none;
+}

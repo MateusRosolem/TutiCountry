@@ -1,0 +1,654 @@
+function getURLVar(key) {
+    var value = [];
+
+    var query = String(document.location).split('?');
+
+    if (query[1]) {
+        var part = query[1].split('&');
+
+        for (i = 0; i < part.length; i++) {
+            var data = part[i].split('=');
+
+            if (data[0] && data[1]) {
+                value[data[0]] = data[1];
+            }
+        }
+
+        if (value[key]) {
+            return value[key];
+        } else {
+            return '';
+        }
+    }
+}
+
+$(document).ready(function () {
+    // Highlight any found errors
+    $('.text-danger').each(function () {
+        var element = $(this).parent().parent();
+
+        if (element.hasClass('form-group')) {
+            element.addClass('has-error');
+        }
+    });
+
+    // Currency
+    $('#form-currency .currency-select').on('click', function (e) {
+        e.preventDefault();
+
+        $('#form-currency input[name=\'code\']').val($(this).attr('name'));
+
+        $('#form-currency').submit();
+    });
+
+    // Language
+    $('#form-language .language-select').on('click', function (e) {
+        e.preventDefault();
+
+        $('#form-language input[name=\'code\']').val($(this).attr('name'));
+
+        $('#form-language').submit();
+    });
+
+    // Menu
+    $('#menu .dropdown-menu').each(function () {
+        var menu = $('#menu').offset();
+        var dropdown = $(this).parent().offset();
+
+        var i = (dropdown.left + $(this).outerWidth()) - (menu.left + $('#menu').outerWidth());
+
+        if (i > 0) {
+            $(this).css('margin-left', '-' + (i + 10) + 'px');
+        }
+    });
+
+    // Menu
+    $('#menu .dropdown-menu').each(function () {
+        var menu = $('#menu').offset();
+        var dropdown = $(this).parent().offset();
+
+        var i = (dropdown.left + $(this).outerWidth()) - (menu.left + $('#menu').outerWidth());
+
+        if (i > 0) {
+            $(this).css('margin-left', '-' + (i + 10) + 'px');
+        }
+    });
+
+    // Product List
+    $('#list-view').click(function () {
+        $('#content .product-grid > .clearfix').remove();
+
+        $('#content .row > .product-grid').attr('class', 'product-layout product-list col-xs-12');
+        $('#grid-view').removeClass('active');
+        $('#list-view').addClass('active');
+
+        localStorage.setItem('display', 'list');
+    });
+
+    // Product Grid
+    $('#grid-view').click(function () {
+        // What a shame bootstrap does not take into account dynamically loaded columns
+        var cols = $('#column-right, #column-left').length;
+
+        if (cols == 2) {
+            $('#content .product-list').attr('class', 'product-layout product-grid col-lg-6 col-md-6 col-sm-12 col-xs-12');
+        } else if (cols == 1) {
+            $('#content .product-list').attr('class', 'product-layout product-grid col-lg-4 col-md-4 col-sm-6 col-xs-12');
+        } else {
+            $('#content .product-list').attr('class', 'product-layout product-grid col-lg-3 col-md-3 col-sm-6 col-xs-12');
+        }
+
+        $('#list-view').removeClass('active');
+        $('#grid-view').addClass('active');
+
+        localStorage.setItem('display', 'grid');
+    });
+
+    if (localStorage.getItem('display') == 'list') {
+        $('#list-view').trigger('click');
+        $('#list-view').addClass('active');
+    } else {
+        $('#grid-view').trigger('click');
+        $('#grid-view').addClass('active');
+    }
+
+    // Checkout
+    $(document).on('keydown', '#collapse-checkout-option input[name=\'email\'], #collapse-checkout-option input[name=\'password\']', function (e) {
+        if (e.keyCode == 13) {
+            $('#collapse-checkout-option #button-login').trigger('click');
+        }
+    });
+
+    // tooltips on hover
+    $('[data-toggle=\'tooltip\']').tooltip({container: 'body'});
+
+    // Makes tooltips work on ajax generated content
+    $(document).ajaxStop(function () {
+        $('[data-toggle=\'tooltip\']').tooltip({container: 'body'});
+    });
+
+    // Prevenir cliques no carrinho
+    $(document).on('click', '#cart .dropdown-menu, #quotation .dropdown-menu', function (e) {
+        e.stopPropagation();
+    });
+});
+
+// Cart add remove functions
+var cart = {
+    'add': function (product_id, quantity) {
+        $('.alert').remove();
+        return $.ajax({
+            url: 'index.php?route=checkout/cart/add',
+            type: 'post',
+            data: 'product_id=' + product_id + '&quantity=' + (typeof (quantity) != 'undefined' ? quantity : 1),
+            dataType: 'json',
+            success: function (json) {
+
+                if (json['redirect']) {
+                    location = json['redirect'];
+                }
+
+                if (json['success']) {
+                    cart.atualizaQuantidade(json['quantity_items']);
+
+                    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                        window.location.href = $('#cart .comprar').attr('href');
+                    } else {
+                        $('.breadcrumb').after('<div class="alert alert-success">' + json['success'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+                        cart.abreDropdown();
+                    }
+
+                    $('#cart > ul').load('index.php?route=common/cart/info ul li');
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    },
+    'update': function (key, quantity) {
+        $('.alert').remove();
+        return $.ajax({
+            url: 'index.php?route=checkout/cart/edit',
+            type: 'post',
+            data: 'key=' + key + '&quantity=' + (typeof (quantity) != 'undefined' ? quantity : 1),
+            dataType: 'json',
+            success: function (json) {
+                cart.atualizaQuantidade(json['total']);
+
+                if (getURLVar('route') == 'checkout/cart' || getURLVar('route') == 'checkout/checkout') {
+                    location = 'index.php?route=checkout/cart';
+                } else {
+                    $('.breadcrumb').after('<div class="alert alert-success">' + json['success'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+
+                    $('#cart > ul').load('index.php?route=common/cart/info ul li');
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    },
+    'remove': function (key) {
+        $('.alert').remove();
+        return $.ajax({
+            url: 'index.php?route=checkout/cart/remove',
+            type: 'post',
+            data: 'key=' + key,
+            dataType: 'json',
+            success: function (json) {
+                cart.atualizaQuantidade(json['quantity_items']);
+
+                if (getURLVar('route') == 'checkout/cart' || getURLVar('route') == 'checkout/checkout') {
+                    location = 'index.php?route=checkout/cart';
+                } else {
+                    $('.breadcrumb').after('<div class="alert alert-success">' + json['success'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+
+                    $('#cart > ul').load('index.php?route=common/cart/info ul li');
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    },
+    'atualizaQuantidade': function (quantidade) {
+        $('.alert').remove();
+        // Need to set timeout otherwise it wont update the total
+        setTimeout(function () {
+            $('#cart > button #cart-total').replaceWith('<span id="cart-total" data-quantity-items="' + quantidade + '">' + quantidade + '</span>');
+        }, 100);
+    },
+    'abreDropdown': function () {
+        function animacao() {
+            if (!$("#cart").hasClass("open")) {
+                $("#cart").find('[data-toggle="dropdown"]').dropdown('toggle');
+            }
+        }
+
+        if ($(window).scrollTop() > 0 && !$('#menuFixo').hasClass('fixo')) {
+            $('html, body').animate({scrollTop: 0}, 'slow', animacao);
+        } else {
+            animacao();
+        }
+    },
+}
+
+var quotation = {
+    'add': function (product_id, quantity) {
+        $('.alert').remove();
+        return $.ajax({
+            url: 'index.php?route=checkout/quotation/add',
+            type: 'post',
+            data: 'product_id=' + product_id + '&quantity=' + (typeof (quantity) != 'undefined' ? quantity : 1),
+            dataType: 'json',
+            success: function (json) {
+
+                if (json['redirect']) {
+                    location = json['redirect'];
+                }
+
+                if (json['success']) {
+                    quotation.atualizaQuantidade(json['quantity_items']);
+
+                    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                        window.location.href = $('#quotation .comprar').attr('href');
+                    } else {
+                        $('.breadcrumb').after('<div class="alert alert-success">' + json['success'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+                        quotation.abreDropdown();
+                    }
+
+                    $('#quotation > ul').load('index.php?route=common/quotation/info ul li');
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    },
+    'update': function (key, quantity) {
+        $('.alert').remove();
+        return $.ajax({
+            url: 'index.php?route=checkout/quotation/edit',
+            type: 'post',
+            data: 'key=' + key + '&quantity=' + (typeof (quantity) != 'undefined' ? quantity : 1),
+            dataType: 'json',
+            success: function (json) {
+                quotation.atualizaQuantidade(json['total']);
+
+                if (getURLVar('route') == 'checkout/quotation' || getURLVar('route') == 'checkout/checkout') {
+                    location = 'index.php?route=checkout/quotation';
+                } else {
+                    $('.breadcrumb').after('<div class="alert alert-success">' + json['success'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+
+                    $('#quotation > ul').load('index.php?route=common/quotation/info ul li');
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    },
+    'remove': function (key) {
+        $('.alert').remove();
+        return $.ajax({
+            url: 'index.php?route=checkout/quotation/remove',
+            type: 'post',
+            data: 'key=' + key,
+            dataType: 'json',
+            success: function (json) {
+                quotation.atualizaQuantidade(json['quantity_items']);
+
+                if (getURLVar('route') == 'checkout/quotation') {
+                    location = 'index.php?route=checkout/quotation';
+                } else {
+                    $('.breadcrumb').after('<div class="alert alert-success">' + json['success'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+
+                    $('#quotation > ul').load('index.php?route=common/quotation/info ul li');
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    },
+    'atualizaQuantidade': function (quantidade) {
+        $('.alert').remove();
+        // Need to set timeout otherwise it wont update the total
+        setTimeout(function () {
+            $('#quotation > button #quotation-total').replaceWith('<span id="quotation-total" data-quantity-items="' + quantidade + '">' + quantidade + '</span>');
+        }, 100);
+    },
+    'abreDropdown': function () {
+        function animacao() {
+            if (!$("#quotation").hasClass("open")) {
+                $("#quotation").find('[data-toggle="dropdown"]').dropdown('toggle');
+            }
+        }
+
+        if ($(window).scrollTop() > 0 && !$('#menuFixo').hasClass('fixo')) {
+            $('html, body').animate({scrollTop: 0}, 'slow', animacao);
+        } else {
+            animacao();
+        }
+    },
+}
+
+var voucher = {
+    'add': function () {
+
+    },
+    'remove': function (key) {
+        return $.ajax({
+            url: 'index.php?route=checkout/cart/remove',
+            type: 'post',
+            data: 'key=' + key,
+            dataType: 'json',
+            success: function (json) {
+                cart.atualizaQuantidade(json['quantity_items']);
+
+                if (getURLVar('route') == 'checkout/cart' || getURLVar('route') == 'checkout/checkout') {
+                    location = 'index.php?route=checkout/cart';
+                } else {
+                    $('.breadcrumb').after('<div class="alert alert-success">' + json['success'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+
+                    $('#cart > ul').load('index.php?route=common/cart/info ul li');
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    }
+}
+
+var wishlist = {
+    'add': function (product_id) {
+        return $.ajax({
+            url: 'index.php?route=account/wishlist/add',
+            type: 'post',
+            data: 'product_id=' + product_id,
+            dataType: 'json',
+            success: function (json) {
+                $('.alert').remove();
+
+                if (json['redirect']) {
+                    location = json['redirect'];
+                }
+
+                $('.breadcrumb').after('<div class="alert alert-success">' + json['success'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+
+                $('#wishlist-total span').html(json['total']);
+                $('#wishlist-total').attr('title', json['total']);
+
+                $('#responsivo-wishlist a').html('<span class="menu-responsivo-icons menu-responsivo-desejo"></span> ' + json['total']);
+                $('#responsivo-wishlist a').attr('title', json['total']);
+
+                $('html, body').animate({scrollTop: 0}, 'slow');
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    },
+    'remove': function () {
+
+    }
+}
+
+var compare = {
+    'add': function (product_id) {
+        return $.ajax({
+            url: 'index.php?route=product/compare/add',
+            type: 'post',
+            data: 'product_id=' + product_id,
+            dataType: 'json',
+            success: function (json) {
+                $('.alert').remove();
+
+                if (json['success']) {
+                    $('#compare-total').html(json['total']);
+
+                    $('html, body').animate({scrollTop: 0}, 'slow');
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError + "\r\n" + xhr.statusText + "\r\n" + xhr.responseText);
+            }
+        });
+    },
+    'remove': function () {
+
+    }
+}
+
+/* Agree to Terms */
+$(document).delegate('.agree', 'click', function (e) {
+    e.preventDefault();
+
+    $('#modal-agree').remove();
+
+    var element = this;
+
+    $.ajax({
+        url: $(element).attr('href'),
+        type: 'get',
+        dataType: 'html',
+        success: function (data) {
+            html = '<div id="modal-agree" class="modal">';
+            html += '  <div class="modal-dialog">';
+            html += '    <div class="modal-content">';
+            html += '      <div class="modal-header">';
+            html += '        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>';
+            html += '        <h4 class="modal-title">' + $(element).text() + '</h4>';
+            html += '      </div>';
+            html += '      <div class="modal-body">' + data + '</div>';
+            html += '    </div';
+            html += '  </div>';
+            html += '</div>';
+
+            $('body').append(html);
+
+            $('#modal-agree').modal('show');
+        }
+    });
+});
+
+// Autocomplete
+(function ($) {
+    $.fn.autocomplete = function (option) {
+        return this.each(function () {
+            var $this = $(this);
+            this.dropdown = $('<ul class="autocomplete dropdown-menu" />');
+            this.listItemTemplate = '<li data-value="{{data:value}}"><a href="#">{{data:label}}</a></li>'
+
+            this.timer = null;
+            this.items = [];
+
+            $.extend(this, option);
+
+            $this.attr('autocomplete', 'off');
+
+            // Focus
+            $this.on('focus', function () {
+                this.request();
+            });
+
+            // Blur
+            $this.on('blur', function () {
+                setTimeout(function (object) {
+                    object.hide();
+                }, 200, this);
+            });
+
+            this.dropdown.on('mouseenter', '> li', function (e) {
+                $(this).addClass('hover');
+                $(e.target).closest('ul').find('> li.active').removeClass('active');
+            });
+
+            this.dropdown.on('mouseleave', '> li', function (e) {
+                $(this).removeClass('hover');
+            });
+
+            // Keydown
+            $this.on('keydown', function (event) {
+                switch (event.keyCode) {
+                    case 13: // enter
+                        if (this.dropdown.find('> li.active')) { // Se uma das opções estiver ativa (navegação com as setas)
+                            event.preventDefault();
+                            this.dropdown.find('> li.active').click();
+                            return false;
+                        }
+                        break;
+                    case 27: // escape
+                        this.hide();
+                        break;
+                    case 38: // up
+                        event.preventDefault(); // evitar a tela de se mexer
+                        this.moveUp();
+                        break;
+                    case 40: // down
+                        event.preventDefault(); // evitar a tela de se mexer
+                        this.moveDown();
+                        break;
+                    default:
+                        this.request();
+                        break;
+                }
+            });
+
+            // Click
+            this.click = function (event) {
+                event.preventDefault();
+
+                var value = $(event.target).closest('[data-value]').attr('data-value');
+
+                if (value && this.items[value]) {
+                    this.select(this.items[value]);
+                }
+            };
+
+            // Show
+            this.show = function () {
+                var pos = $this.position();
+
+                this.dropdown.css({
+                    top: pos.top + $this.outerHeight(),
+                    left: pos.left
+                });
+
+                this.dropdown.slideDown('fast');
+                $this.trigger('ws.autocomplete.show');
+            };
+
+            // Hide
+            this.hide = function () {
+                this.dropdown.slideUp('fast');
+                $this.trigger('ws.autocomplete.hide');
+            };
+
+            // Request
+            this.request = function () {
+                clearTimeout(this.timer);
+
+                this.timer = setTimeout(function (object) {
+                    if ($(object).val().length) {
+                        object.source($(object).val(), $.proxy(object.response, object));
+                    } else {
+                        object.hide();
+                    }
+                }, 200, this);
+            };
+
+            // Response
+            this.response = function (json) {
+                var html = '';
+                var category = {};
+                var name;
+                var i = 0, j = 0;
+
+                if (json.length) {
+                    for (i = 0; i < json.length; i++) {
+                        // update element items
+                        this.items[json[i]['value']] = json[i];
+
+                        if (!json[i]['category']) {
+                            // ungrouped items
+                            html += this.listItemTemplate.replace(/{{data:(.*?)}}/g, function (match, group1) {
+                                return json[i][group1];
+                            });
+                        } else {
+                            // grouped items
+                            name = json[i]['category'];
+                            if (!category[name]) {
+                                category[name] = [];
+                            }
+
+                            category[name].push(json[i]);
+                        }
+                    }
+
+                    for (name in category) {
+                        html += '<li class="dropdown-header">' + name + '</li>';
+
+                        for (j = 0; j < category[name].length; j++) {
+                            html += this.listItemTemplate.replace(/{{data:(.*?)}}/g, function (match, group1) {
+                                return category[name][j][group1];
+                            });
+                        }
+                    }
+                }
+
+                if (html) {
+                    this.dropdown.html(html);
+                    this.show();
+                } else {
+                    this.hide();
+                    this.dropdown.html(html);
+                }
+
+            };
+
+            this.moveUp = function () {
+                var $active = this.dropdown.find('> li.active');
+                if (this.dropdown.find('> li.hover').length) {
+                    $active.removeClass('active');
+                    $active = this.dropdown.find('> li.hover');
+                    $active.removeClass('hover');
+                }
+
+                if ($active.length && $active.prev().length) {
+                    $active.prev().addClass('active');
+                    $active.removeClass('active');
+                } else {
+                    if ($active.length) {
+                        $active.removeClass('active')
+                    }
+                    this.dropdown.find('> li').last().addClass('active');
+                }
+            }
+
+            this.moveDown = function () {
+                var $active = this.dropdown.find('> li.active');
+                if (this.dropdown.find('> li.hover').length) {
+                    $active.removeClass('active');
+                    $active = this.dropdown.find('> li.hover');
+                    $active.removeClass('hover');
+                }
+
+                if ($active.length && $active.next().length) {
+                    $active.next().addClass('active');
+                    $active.removeClass('active');
+                } else {
+                    if ($active.length) {
+                        $active.removeClass('active')
+                    }
+                    this.dropdown.find('> li').first().addClass('active');
+                }
+            }
+
+            this.dropdown.on('click', '> li', $.proxy(this.click, this));
+            $this.after(this.dropdown);
+        });
+    }
+})(window.jQuery);

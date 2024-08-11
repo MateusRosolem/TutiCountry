@@ -1,0 +1,972 @@
+var w = window.innerWidth;
+var h = window.innerHeight;
+
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isFirefox() {
+    return 'MozAppearance' in document.documentElement.style;
+}
+
+/**
+ * função parar gerar o link correto do whatsapp
+ * há um problema, pois os links para computador (firefox e chrome) e celular são diferentes
+ */
+function whatsapp() {
+    var wpp = $('.fa-whatsapp');
+
+    $(wpp).each(function () {
+        //this for link wpp
+        var athis = $(this).closest('a');
+
+        var link, text, temp;
+        var numWpp = athis.closest('a').data('num');
+        var textWpp = athis.data('text');
+
+        if (numWpp != undefined) {
+            if (textWpp == undefined) {
+                textWpp = 'Olá, encontrei seu contato no Ecommerce';
+            }
+
+            temp = textWpp.replace(/ /g, '%20');
+            text = 'text=' + temp;
+
+            if (isFirefox() || !isMobile()) {
+                link = 'web';
+            } else {
+                link = 'api';
+            }
+
+            var ddd = (numWpp.toString()).slice(0, 2);
+
+            if (ddd != 55) {
+                numWpp = '55' + numWpp;
+            }
+
+            athis.attr('href', 'https://' + link + '.whatsapp.com/send?phone=+' + numWpp + '&' + text);
+        }
+    });
+}
+
+function abrirJanela(url) {
+    var width = window.innerWidth * 0.5;
+    // define the height in
+    var height = (width * window.innerHeight / window.innerWidth) * 2;
+    // Ratio the hight to the width as the user screen ratio
+    window.open(url, 'newwindow', 'width=' + width + ', height=' + height + ', top=' + ((window.innerHeight - height) / 2) + ', left=' + ((window.innerWidth - width) / 2));
+    return false;
+}
+
+$(document).ready(function () {
+    $(window).resize();
+    $(window).scroll();
+    whatsapp();
+});
+
+/* ==================== Erros de AJAX ========================*/
+function handleAjaxError(jqXHR, textStatus, errorThrown) {
+    alert('Erro ao processar sua solicitação. Por favor, tente novamente');
+    $('#content').removeClass('loading');
+    if (typeof jqXHR !== 'undefined') {
+        console.log('Erro!\njqXHR: ');
+        console.log(jqXHR);
+        console.log('textStatus: ' + textStatus + '\nerrorThrown: ' + errorThrown);
+    }
+}
+
+/* ==================== Redimensionar banner slideshow =======================*/
+$(window).resize(function () {
+    if (window.innerWidth <= 1150) {
+        setTimeout(function () {
+            alturaSlick = $('.fullslick').height();
+            $('.boxfullslick').height(alturaSlick);
+        }, 100);
+    } else {
+        $('.boxfullslick').height($('.slideshow').attr('data-height'));
+    }
+});
+
+/* ======================== Completar endereço por CEP ============================== */
+function getCep($form, beforeSave, success, invalido) {
+    var $inputCep = $form.find('input[name="postcode"]');
+    var cep = $.trim($inputCep.val().replace('-', ''));
+    var cepInvalido = function () {
+        // Tratar CEP inválido aqui
+        $inputCep.siblings('span.text-danger').remove();
+        $('<span class="text-danger">CEP inválido</span>').insertAfter($inputCep);
+        $inputCep.closest('.form-group').addClass('has-error');
+
+        if ($.isFunction(invalido)) {
+            invalido();
+        }
+    };
+
+    if (cep.length == 0) {
+        return;
+    } else if (cep.length < 8 || cep.length > 9) {
+        cepInvalido();
+        return;
+    }
+
+    $inputCep.siblings('span.text-danger').remove();
+    $inputCep.closest('.form-group').removeClass('has-error');
+
+    var $loading = $inputCep.closest('.form-group').find('.loading');
+    if ($loading.length > 0) {
+        $loading.fadeIn('fast');
+    }
+    // Fazer função de loading
+    if ($.isFunction(beforeSave)) {
+        beforeSave();
+    }
+
+    // Atualizar para pegar payment-address e shipping-address
+    $.getJSON("https://api.winsite.com.br/cep/" + cep).done(function (dados) {
+        if (!("erro" in dados)) {
+            $form.find('input[name="address_1"]').val(dados.logradouro);
+            $form.find('input[name="address_2"]').val(dados.bairro);
+            $form.find('input[name="city"]').val(decodeURIComponent(dados.localidade));
+
+            $.post('index.php?route=account/register/estado_autocompletar&estado=' + decodeURIComponent(dados.uf), function (zone_id) {
+                $form.find('select[name="zone_id"] option[selected]').removeAttr('selected'); // Remover a opçao atuamente selecionada
+                $form.find('select[name="zone_id"] option[value="' + zone_id + '"]').prop('selected', true); // Selecionar o estado atual
+            }).done(function () {
+                if ($.isFunction(success)) {
+                    success();
+                }
+            });
+        } else {
+            cepInvalido();
+        }
+    }).fail(handleAjaxError);
+
+    if ($loading.length > 0) {
+        $loading.fadeOut('fast');
+    }
+}
+
+$(function () {
+    $(document).on('focusin', '#input-postcode', function () {
+        var $form = $(this).closest('form');
+        var $botaoSalvar = $form.find('input[type="submit"]');
+
+        $botaoSalvar.attr('disabled', true);
+    });
+
+    $(document).on('blur', '#input-postcode', function () {
+        var $form = $(this).closest('form');
+        var $fieldset = $form.find('fieldset.detalhes-endereco');
+        var $botaoSalvar = $form.find('input[type="submit"]');
+
+        $botaoSalvar.prop('disabled', false);
+
+        getCep($form, null, function () { // callback de sucesso
+            // Mostrar os campos adicionais do cadastro
+            if ($fieldset.length) {
+                $fieldset.slideDown(400);
+            }
+
+            $botaoSalvar.prop('disabled', false);
+        }, function () { // callback de erro
+            if ($fieldset.length) {
+                // Esconder e limpar campos
+                $fieldset.slideUp(400);
+            }
+
+            $botaoSalvar.prop('disabled', true);
+        });
+    });
+    // Inputs do endereço de pagamento e de entrega ficam no checkout.js
+});
+
+$(window).scroll(function () {
+    // Só executar se o cabeçalho for reduzido
+    if (!$('header').hasClass('reduzido') && window.innerWidth > 767) {
+        var pos = $(this).scrollTop();
+        if (pos > alturaHeader()) {
+            if (!$('#menuFixo').hasClass('fixo')) {
+                fixarMenu();
+            }
+        } else if (pos + $('#menuFixo').outerHeight() < alturaHeader() && $('#menuFixo').hasClass('fixo')) {
+            desfixarMenu();
+        }
+    }
+});
+
+// Alterar se houver mais divs ou algum id mudar
+function alturaHeader() {
+    return $('header').outerHeight() + $('#menu-wrapper').outerHeight();
+}
+
+function fixarMenu() {
+    if (w > 767) {
+        $('#menuFixo .search-wrapper').append($('#search'));
+    } else {
+        $('#searchFixo .search-wrapper').append($('#search'));
+        $('#search').addClass('open');
+    }
+    $('#menuFixo .cart-wrapper').append($('#cart'));
+    $('#menuFixo .quotation-wrapper').append($('#quotation'));
+    $('#menuFixo').css({top: '0'}).addClass('fixo');
+}
+
+function desfixarMenu() {
+    $('#menuFixo').css({top: -($('#menuFixo').outerHeight()) + 'px'}).removeClass('fixo');
+    $('header .search-wrapper').append($('#search'));
+    $('header .cart-wrapper').append($('#cart'));
+    $('header .quotation-wrapper').append($('#quotation'));
+}
+
+// fadeToggle e slideToggle baseado em booleano
+jQuery.fn.fadeToggleBoolean = function (status, duration, complete) {
+    return status ? this.fadeIn(duration, complete) : this.fadeOut(duration, complete);
+};
+
+jQuery.fn.slideToggleBoolean = function (status, duration, complete) {
+    return status ? this.slideDown(duration, complete) : this.slideUp(duration, complete);
+};
+
+/* ================== Carrinho ================ */
+function atualizaCarrinhos() {
+    var deferred = new $.Deferred();
+    $.get({
+        url: 'index.php?route=checkout/cart/info',
+    }).done(function (html) {
+        // Tenta converter o retorno em JSON
+        try {
+            // Se conseguiu, significa que o controller retornou algum problema
+            var json = JSON.parse(html);
+            // Se passou um redirect, redirecionar para a página
+            if (json && json['redirect']) {
+                window.location = json['redirect'];
+            }
+        } catch (ex) {
+            // Se deu exception ao converter, significa que é um HTML
+            if (html.length) {
+                $('#content > .row').html(html).promise().done(function () {
+                    var countProducts = $('input[name="count_products"]').val();
+                    cart.atualizaQuantidade(countProducts);
+
+                    $('#cart > ul').load('index.php?route=common/cart/info ul li');
+                    deferred.resolve();
+                });
+            } else {
+                deferred.resolve();
+            }
+        }
+    }).fail(function () {
+        deferred.reject();
+    });
+    return deferred.promise();
+}
+
+function atualizaQuotes() {
+    var deferred = new $.Deferred();
+    $.get({
+        url: 'index.php?route=checkout/quotation/info',
+    }).done(function (html) {
+        // Tenta converter o retorno em JSON
+        try {
+            // Se conseguiu, significa que o controller retornou algum problema
+            var json = JSON.parse(html);
+            // Se passou um redirect, redirecionar para a página
+            if (json && json['redirect']) {
+                window.location = json['redirect'];
+            }
+        } catch (ex) {
+            // Se deu exception ao converter, significa que é um HTML
+            if (html.length) {
+                $('#content > .row').html(html).promise().done(function () {
+                    var countProducts = $('input[name="count_products"]').val();
+                    quotation.atualizaQuantidade(countProducts);
+
+                    $('#quotation > ul').load('index.php?route=common/quotation/info ul li');
+                    deferred.resolve();
+                });
+            } else {
+                deferred.resolve();
+            }
+        }
+    }).fail(function () {
+        deferred.reject();
+    });
+    return deferred.promise();
+}
+
+$(window).resize(function () {
+    if (window.innerWidth < 768) {
+        // Fechar collapse de cupom, pontos, vale-presente e frete
+        if (!$('#accordion .panel-heading > a').hasClass('collapsed')) {
+            $('#accordion .panel-heading > a').addClass('collapsed').attr('aria-expanded', false);
+            $('#accordion #collapse-modules').removeClass('in').attr('aria-expanded', false);
+        }
+
+        // Fechar collapse de calculo de frete na visualização do produto
+        if (!($('#calcular-frete .panel-heading > a').hasClass('collapsed'))) {
+            $('#calcular-frete .panel-heading > a').addClass('collapsed').attr('aria-expanded', false);
+            $('#collapse-calcular-frete').removeClass('in').attr('aria-expanded', false);
+        }
+
+        // Botão de compartilhar produto em cima na imagem
+        if (!$('#content.visualizar-produto > .share-wrapper').length) {
+            $('#content.visualizar-produto').prepend($('#content.visualizar-produto .share-wrapper'));
+        }
+    } else if (window.innerWidth > 767) {
+        // Abrir collapse de cupom, pontos, vale-presente e frete
+        if ($('#accordion .panel-heading > a').hasClass('collapsed')) {
+            $('#accordion .panel-heading > a').removeClass('collapsed').attr('aria-expanded', true);
+            $('#accordion #collapse-modules').addClass('in').attr('aria-expanded', true);
+        }
+
+        // Abrir collapse de calculo de frete na visualização do produto
+        if (($('#calcular-frete .panel-heading > a').hasClass('collapsed'))) {
+            $('#calcular-frete .panel-heading > a').removeClass('collapsed').attr('aria-expanded', true);
+            $('#collapse-calcular-frete').addClass('in').attr('aria-expanded', true);
+        }
+
+        // Botão de compartilhar produto ao lado do nome do produto
+        if ($('#content.visualizar-produto > .share-wrapper').length) {
+            $('#content.visualizar-produto .dados-produto .titulo').append($('#content.visualizar-produto .share-wrapper'));
+        }
+    }
+});
+
+$(document).ready(function () {
+    $('.carrinho').on('change', '.input-number', function () {
+        $('#content').addClass('loading');
+        var input = $(this);
+        var cartId = input.attr('data-cart-id');
+        var quantity = parseInt(input.val());
+        var oldValue = parseInt(input.data('oldValue'));
+
+        $.post({
+            url: 'index.php?route=checkout/cart/edit',
+            data: {
+                key: cartId,
+                quantity: (!isNaN(quantity) ? quantity : 1)
+            },
+            dataType: 'json',
+        }).done(function (json) {
+            if (!json['error']) { // Se não retornou nenhum erro
+                atualizaCarrinhos().done(function () {
+                    $('.alert').remove();
+                    if (json['error_warning']) {
+                        $('ul.breadcrumb').after('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;'
+                            + json['error_warning'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+                    }
+                    $('#content').removeClass('loading');
+                });
+            } else if (json['error']['quantity']) {
+                input.val(oldValue);
+                $('.alert').remove();
+                $('ul.breadcrumb').after('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;'
+                    + json['error']['quantity'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+                $('#content').removeClass('loading');
+            }
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            handleAjaxError(jqXHR, textStatus, errorThrown);
+        });
+    });
+
+    $('.carrinho').on('click', '.remove-carrinho', function () {
+        var cartId = $(this).attr('data-cart-id');
+        if (cartId) {
+            $('#content').addClass('loading');
+            cart.remove(cartId).done(function () {
+                atualizaCarrinhos().done(function () {
+                    $('#content').removeClass('loading');
+                });
+            });
+            $('.alert').removeClass('alert');
+        }
+    }).on('click', '.remove-voucher', function () {
+        $('.alert').remove();
+        var voucherKey = $(this).attr('data-voucher-key');
+        if (voucherKey) {
+            $('#content').addClass('loading');
+            voucher.remove(voucherKey).done(function () {
+                atualizaCarrinhos().done(function () {
+                    $('#content').removeClass('loading');
+                });
+            });
+        }
+    });
+
+    $('.quotation').on('click', '.remove-quotation', function () {
+        var quotationCartId = $(this).attr('data-quotation-cart-id');
+        if (quotationCartId) {
+            $('#content').addClass('loading');
+            quotation.remove(quotationCartId).done(function () {
+                atualizaQuotes().done(function () {
+                    $('#content').removeClass('loading');
+                });
+            });
+        }
+    });
+
+    $('.quotation').on('change', '.input-number', function () {
+        $('#content').addClass('loading');
+        var input = $(this);
+        var cartId = input.attr('data-quotation-cart-id');
+        var quantity = parseInt(input.val());
+        var oldValue = parseInt(input.data('oldValue'));
+
+        $.post({
+            url: 'index.php?route=checkout/quotation/edit',
+            data: {
+                key: cartId,
+                quantity: (!isNaN(quantity) ? quantity : 1)
+            },
+            dataType: 'json',
+        }).done(function (json) {
+            if (!json['error']) { // Se não retornou nenhum erro
+                atualizaQuotes().done(function () {
+                    $('.alert').remove();
+                    if (json['error_warning']) {
+                        $('ul.breadcrumb').after('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;'
+                            + json['error_warning'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+                    }
+                    $('#content').removeClass('loading');
+                });
+            } else if (json['error']['quantity']) {
+                input.val(oldValue);
+                $('.alert').remove();
+                $('ul.breadcrumb').after('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;'
+                    + json['error']['quantity'] + '<button type="button" class="close" data-dismiss="alert">&times;</button></div>');
+                $('#content').removeClass('loading');
+            }
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            handleAjaxError(jqXHR, textStatus, errorThrown);
+        });
+    });
+
+    // Se der enter em um dos módulos do carrinho (cupom, vale, frete, etc)
+    $(document).on('keydown', '.carrinho #collapse-modules input[type="text"]', function (e) {
+        // Se for um enter
+        if (e.keyCode == 13) {
+            $(this).siblings().find('button').click();
+        }
+    })
+});
+
+// Botões de quantidade
+$(document).ready(function () {
+    // Clique nos botões de + e -
+    $(document).on('click', '.btn-number', function (e) {
+        e.preventDefault();
+
+        var fieldName = $(this).attr('data-field');
+        var type = $(this).attr('data-type');
+        var input = $("input[name='" + fieldName + "']");
+
+        var min = parseInt(input.attr('min'));
+        var max = parseInt(input.attr('max'));
+        var currentVal = parseInt(input.val());
+
+        input.data('oldValue', currentVal);
+
+        // Se o valor atual for um número válido
+        if (!isNaN(currentVal)) {
+            if (type == 'minus') { // Se foi o botão de menos
+                // Se o valor estiver acima do mínimo OU se não existir valor mínimo, decrementar
+                if (currentVal > min || isNaN(min)) {
+                    currentVal--;
+                    input.val(currentVal).trigger('change');
+                }
+                // Se possuir um valor mínimo e ele foi atingido, desabilitar o input
+                if (!isNaN(min) && currentVal <= min) {
+                    $(this).attr('disabled', true);
+                }
+            } else if (type == 'plus') { // Se foi o botão de mais
+                // Se o valor estiver abaixo do máximo OU se não existir valor máximo, incrementar
+                if (currentVal < max || isNaN(max)) {
+                    currentVal++;
+                    input.val(currentVal).change();
+                }
+                // Se possuir um valor máximo e ele foi atingido, desabilitar
+                if (!isNaN(max) && currentVal >= max) {
+                    $(this).attr('disabled', true);
+                }
+            }
+        } else { // Se o valor atual for inválido, voltar para o menor valor possível
+            input.val(min);
+        }
+    });
+
+    $(document).on('focusin', '.input-number', function () { // Foco do input de quantidade
+        $(this).data('oldValue', parseInt($(this).val())); // Armazenar o valor antes de ser mudado como 'oldValue'
+    }).on('change', '.input-number', function () { // Change do input de quantidade
+        var minValue = parseInt($(this).attr('min'));
+        var maxValue = parseInt($(this).attr('max'));
+        var currentVal = parseInt($(this).val());
+        var name = $(this).attr('name');
+
+        if ($(this).data('oldValue') == null) {
+            $(this).data('oldValue', minValue);
+        }
+
+        // Se for um valor não-numérico, voltar pro oldValue
+        if (isNaN(currentVal)) {
+            $(this).val($(this).data('oldValue'));
+        } else {
+            // Caso contrário, aplicar o valor com parseInt para remover caracteres extras
+            $(this).val(currentVal);
+        }
+        // Se existir limite mínimo
+        if (!isNaN(minValue)) {
+            // Se o valor estiver acima do limite mínimo, habilitar o botão de -
+            if (currentVal >= minValue) {
+                $(".btn-number[data-type='minus'][data-field='" + name + "']").removeAttr('disabled')
+            } else { // Se atingiu o limite, voltar pro oldValue
+                $(this).val($(this).data('oldValue'));
+            }
+        }
+        // Se existir limite máximo
+        if (!isNaN(maxValue)) {
+            // Se o valor estiver abaixo do limite máximo, habilitar o botão de +
+            if (currentVal <= maxValue) { // Se atingiu o limite, voltar pro oldValue
+                $(".btn-number[data-type='plus'][data-field='" + name + "']").removeAttr('disabled')
+            } else {
+                $(this).val($(this).data('oldValue'));
+            }
+        }
+    });
+});
+
+$(document).ready(function () {
+    // Alert whatsapp no desktop
+    $("a.whatsapp[data-action='share/whatsapp']").on('click', function (e) {
+        if (!isMobile()) {
+            $.fancybox.open('<div><h1>Oops!</h1><p>Por favor, acesse o nosso site em seu celular <br/>para compartilhar no WhatsApp!</p></div>');
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return false;
+        }
+    });
+    // Abrir links com class="newWindow" em uma nova janela
+    $('a.newWindow').on('click', function (e) {
+        if (!isMobile()) {
+            e.preventDefault();
+            return abrirJanela(this.href);
+        }
+    });
+
+});
+
+// Adicionar máscaras
+var TelefoneMaskBehavior = function (val) {
+        return val.replace(/\D/g, '').length >= 11 ? '(00) 00000-0000' : '(00) 0000-00009';
+    },
+    telOptions = {
+        onKeyPress: function (val, e, field, options) {
+            field.mask(TelefoneMaskBehavior.apply({}, arguments), options);
+        }
+    };
+$.fn.maskTelefone = function () {
+    $(this).mask(TelefoneMaskBehavior, telOptions);
+};
+
+// Calcular se o elementos dentro do menu ultrapassam o tamanho da tela
+$(window).resize(function () {
+    if (window.innerWidth > 767) {
+        showHideCategory();
+    }
+});
+
+function showHideCategory() {
+    var maxCategsWidth = $('#menu').innerWidth() - $('#menu ul.nav.pull-right').innerWidth();
+
+    var $categs = $('#menu ul.nav.pull-left > li');
+    var $categsHidden = $categs.filter('.hidden');
+    var $categsNotHidden = $categs.filter(':not(.hidden)');
+
+    var categsNotHiddenWidth = 0;
+    var categsWidth = 0;
+
+    // calcular larguras
+    $categs.each(function (index, e) {
+        if (!$(e).hasClass('hidden')) {
+            categsNotHiddenWidth += $(e).innerWidth();
+        }
+        categsWidth += $(e).innerWidth();
+    });
+    // var width = $categsHidden.first().innerWidth();
+    // console.log(categsNotHiddenWidth + width);
+    // console.log('max width:' + maxCategsWidth);
+    // console.log('esconder ultimo item:' + ((categsNotHiddenWidth + width) <= maxCategsWidth));
+
+    if (categsWidth > maxCategsWidth) {
+        // se necessário esconder a último categoria
+        $categsNotHidden.last().addClass('hidden');
+        showHideCategory();
+    } else if ($categsHidden.length > 0) {
+        // verificar e se couber exibir última categoria escondida
+        $categsHidden.first().css({
+            position: 'absolute',
+            visibility: 'hidden',
+        }).removeClass('hidden');
+        var width = $categsHidden.first().innerWidth();
+        $categsHidden.first().css({
+            position: '',
+            visibility: '',
+        }).addClass('hidden');
+        if ((categsNotHiddenWidth + width) <= maxCategsWidth) {
+            $categsHidden.first().removeClass('hidden');
+            showHideCategory();
+        }
+    }
+}
+
+// Ativar funções do responsivo, como trocar header, ativar menu responsivo e esconder header original ao 767
+$(window).resize(function () {
+    if (window.innerWidth < 768) {
+        enableResponsivo();
+
+        // Calcular altura do corpo do menu responsivo para exibir barra de rolagem
+        var windowHeight = $(window).outerHeight();
+        var topoReponsivoHeight = $('#menuResponsivo .topo').outerHeight();
+        $('#menuResponsivo .corpo').height(windowHeight - topoReponsivoHeight);
+    } else {
+        disableResponsivo();
+    }
+});
+
+$(document).ready(function () {
+    var menuResponsivo;
+    // Fechar menu responsivo ao clicar fora dele
+    $("body").on("click touchstart", function (e) {
+        if ($('#menuResponsivo').hasClass('open')) {
+            menuResponsivo = $('#menuResponsivo, #menuFixo .menu-responsivo-button');
+            // Verifica se o clique foi dentro do alert
+            if (menuResponsivo.has(e.target).length || e.target == menuResponsivo[0]) {
+                return;
+            }
+            closeMenuResponsivo();
+        }
+    });
+});
+
+/* ============================ Alterações cabeçalho ============================*/
+$(document).ready(function () {
+    // Animação slideDown carrinho
+    $('#cart, #quotation').on('show.bs.dropdown', function () {
+        $(this).find('.dropdown-menu').first().stop(true, true).slideDown('fast');
+        $('body').addClass('overlay');
+        verifyScrollCart();
+    });
+
+    // Animação slideUp carrinho
+    $('#cart, #quotation').on('hide.bs.dropdown', function () {
+        $(this).find('.dropdown-menu').first().stop(true, true).slideUp('fast');
+        $('body').removeClass('overlay');
+    });
+
+    $('#search input[name="search"]').on('focus', function () {
+        $('body').addClass('overlay');
+        $('#search').css({zIndex: 10000});
+    });
+
+    $('#search input[name="search"]').autocomplete({
+        'dropdown': $('<ul class="dropdown-menu search-autocomplete"></ul>'),
+        'listItemTemplate': '<li data-value="{{data:value}}">' +
+            '<div class="image"><img src="{{data:image}}" alt="{{data:label}}"/></div>' +
+            '<div class="details">' +
+            '<p class="title">{{data:label}}</p>' +
+            '<p class="description">{{data:description}}</p>' +
+            '<p class="prices {{data:discountClass}}"><span class="price">{{data:price}}</span><span class="discount">{{data:special}}</span></p>' +
+            '{{data:pagseguro_installment}}' +
+            '</div>' +
+            '</li>',
+        'source': function (request, response) {
+            $.ajax({
+                url: 'index.php?route=product/search/autocomplete&filter_name=' + encodeURIComponent(request),
+                dataType: 'json',
+                success: function (json) {
+                    response($.map(json, function (item) {
+                        return {
+                            label: item['name'],
+                            value: item['product_id'],
+                            image: item['image'],
+                            product_id: item['product_id'],
+                            name: item['name'],
+                            description: item['description'],
+                            price: item['price'],
+                            special: item['special'],
+                            link: item['link'],
+                            discountClass: item['discountClass'],
+                            pagseguro_installment: item['pagseguro_installment']
+                        }
+                    }));
+                }
+            });
+        },
+        'select': function (item) {
+            window.location = item.link.replace(/&amp;/g, '&'); // & pode vir codificado como &amp;, convertê-los de volta
+        }
+    });
+
+    var divAlert;
+    // Esconder alerts quando clicar fora
+    $("body").on("click", function (e) {
+        divAlert = $('.alert.fixed');
+        // Verifica se o clique foi dentro do alert
+        if (divAlert.has(e.target).length || e.target == divAlert[0]) {
+            e.preventDefault();
+            return;
+        }
+        divAlert.fadeOut();
+    });
+});
+
+// ======== SEARCH ===========
+// Ao clicar em qualquer elemento com a classe menu-responsivo-button abrir ou fechar o menu
+/* Search */
+$(document).ready(function () {
+    $('#search input[name=\'search\']').parent().find('button').on('click', function () {
+        if (!$('body').hasClass('mobile') || $('#search').hasClass('open')) {
+            var url = $('base').attr('href') + 'index.php?route=product/search';
+
+            var value = $('#search input[name=\'search\']').val();
+
+            if (value) {
+                url += '&search=' + encodeURIComponent(value);
+            }
+
+            location = url;
+        }
+    });
+    var $searchElement;
+    $("body").on("click", function (e) {
+        $searchElement = $('#search');
+        // Verifica se o clique foi dentro do alert
+        if ($searchElement.has(e.target).length || e.target == $searchElement[0]) {
+            e.preventDefault();
+            return;
+        }
+        if ($('#search').hasClass('open')) {
+            $('body').removeClass('overlay');
+            setTimeout(function () {
+                $('#search').css({zIndex: 1});
+            }, 500);
+            if (w > 767) {
+                $('#search').removeClass('open');
+            }
+        }
+    });
+
+    $('#search input[name=\'search\']').on('keydown', function (e) {
+        if (e.keyCode == 13) {
+            $('#search input[name=\'search\']').parent().find('button').trigger('click');
+        }
+    });
+    $('#search input[name=\'search\']').on('focus', function (e) {
+        if (!$('#search').hasClass('open')) {
+            $('#search').addClass('open');
+        }
+    });
+});
+
+$(document).on('click', '.menu-responsivo-button', function (e) {
+    e.preventDefault();
+    if ($('#menuResponsivo').hasClass('open')) {
+        closeMenuResponsivo();
+    } else {
+        openMenuResponsivo();
+    }
+});
+
+// Ao clicar no button dde submit no menu fixo, verificar se irá fazer o submit ou se vai exibir a barra de pesquisa escondido no responsivo
+$(document).on('click', '#search .addon > button', function (e) {
+    if ($('body').hasClass('mobile')) {
+        // Testar se o search já não está aberto
+        if (!$('#search').hasClass('open')) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#search').addClass('open');
+            $('#search input[name=\'search\']').focus();
+            return false;
+        } else {
+            return;
+        }
+    }
+    return;
+});
+
+
+// Mostrar ou esconder elementos necessários para ATIVAR o responsivo
+function enableResponsivo() {
+    if (!$('body').hasClass('mobile')) {
+        fixarMenu();
+        $('body').addClass('mobile');
+        if (!$('#menuResponsivo .topo .logo-wrapper').length) {
+            $('#menuResponsivo .topo').append($('#menuFixo .logo-wrapper').clone());
+        }
+        if (!$('#menuFixo .logo-wrapper .menu-responsivo-button').length) {
+            $('#menuFixo .logo-wrapper').prepend('<span class="menu-responsivo-button"></span>')
+        } else {
+            $('#menuFixo .logo-wrapper .menu-responsivo-button').show()
+        }
+    }
+}
+
+// Mostrar ou esconder elementos necessários para DESATIVAR o responsivo
+function disableResponsivo() {
+    if ($('body').hasClass('mobile')) {
+        desfixarMenu();
+        closeMenuResponsivo();
+        $('body').css({
+            paddingTop: ''
+        }).removeClass('mobile');
+        $('#search.open').removeClass('open');
+        if ($('#menuFixo .logo-wrapper .menu-responsivo-button').length) {
+            $('#menuFixo .logo-wrapper .menu-responsivo-button').hide();
+        }
+    }
+}
+
+// Abrir menu responsivo
+function openMenuResponsivo() {
+    $('body').addClass('overlay overlay-menu-responsivo');
+    $('#menuResponsivo').addClass('open');
+}
+
+// Fechar menu responsivo
+function closeMenuResponsivo() {
+    $('body').removeClass('overlay overlay-menu-responsivo');
+    $('#menuResponsivo').removeClass('open');
+}
+
+// ============== BARRA DE ROLAGEM CARRINHO ============= //
+$(window).resize(function () {
+    verifyScrollCart();
+});
+
+function verifyScrollCart() {
+    var heightTopo,
+        totalsHeight,
+        padding;
+
+    totalsHeight = $('#cart .dropdown-menu > li:last-child').outerHeight();
+    if (window.innerWidth > 767) {
+        padding = 60;
+        heightTopo = $('header').outerHeight();
+    } else {
+        padding = 100;
+        heightTopo = $('#menuFixo').outerHeight();
+    }
+    $('#cart .dropdown-menu').addClass('scroll');
+    $('#cart .dropdown-menu > li:first-child').css({maxHeight: ($(window).outerHeight() - totalsHeight - heightTopo - padding)});
+}
+
+// ============== BARRA DE ROLAGEM AUTOCOMPLETE ============= //
+$(document).ready(function () {
+    $('#search input[name=\'search\']').on('ws.autocomplete.show', function () {
+        verifyAutocomplete();
+    });
+});
+
+function verifyAutocomplete() {
+    var heightTopo,
+        padding;
+    if (window.innerWidth > 767) {
+        padding = 60;
+        heightTopo = $('header').outerHeight();
+    } else {
+        padding = 60;
+        heightTopo = $('#menuFixo').outerHeight();
+    }
+    $('.search-autocomplete').addClass('scroll').css({maxHeight: ($(window).outerHeight() - heightTopo - padding)});
+}
+
+// ============== BARRA DE ROLAGEM DROPDOWN CATEGORIA ============= //
+$(window).resize(function () {
+    verifyDropdownCategory();
+});
+
+function verifyDropdownCategory() {
+
+    var $dropdowns = $('#menu .dropdown');
+    $dropdowns.each(function (index, element) {
+        var bannerWidth = 0;
+        var bannerHeight = 0;
+        // Verificar se há banner
+        if ($(element).find('.dropdown-menu').hasClass('tem-banner')) {
+            bannerWidth = $(element).find('.banner img').innerWidth() + 30;  // largura do banner + 30 de padding do bootstrap
+            bannerHeight = $(element).find('.banner img').outerHeight();
+
+            // Largura do dropdown será igual ao dobro da largura da imagem
+            $(element).find('.dropdown-menu.tem-banner').css({
+                minWidth: bannerWidth * 2
+            });
+
+            // Altura dos col-sm-6 é a mesma do banner para o "Ver tudo" ficar alinhado
+            $(element).find('.col-sm-6').height(bannerHeight).find('> ul').css({
+                maxHeight: bannerHeight - 23
+            });
+        }
+    });
+
+    var heightTopo,
+        padding;
+    if (window.innerWidth > 767) {
+        padding = 60;
+        heightTopo = $('header').outerHeight() + $('#top').outerHeight() + $('#menu-wrapper').outerHeight();
+    } else {
+        padding = 60;
+        heightTopo = $('#menuFixo').outerHeight();
+    }
+
+    $('#menu .dropdown .dropdown-menu .dropdown-inner').css({
+        maxHeight: ($(window).outerHeight() - heightTopo - padding),
+        width: $('.container').outerWidth() - 30,
+    });
+
+    $('#menu .dropdown').css({
+        position: 'static'
+    });
+}
+
+$(document).ready(function () {
+    $('.share').on('click', function () {
+        if (window.innerWidth < 768) {
+            if ($(this).hasClass('open')) {
+                $(this).removeClass('open');
+            } else {
+                $(this).addClass('open');
+            }
+        }
+    });
+
+    var $shareElement;
+    $("body").on("click", function (e) {
+        $shareElement = $('.share');
+        // Verifica se o clique foi dentro do alert
+        if ($shareElement.has(e.target).length || e.target == $shareElement[0]) {
+            e.preventDefault();
+            return;
+        }
+        if ($('.share').hasClass('open')) {
+            $('.share').removeClass('open');
+        }
+    });
+});
+
+//Função para o tamanho da tela ficar fullheight sempre
+$(document).ready(function () {
+    var footer;
+
+    if ($('header').hasClass('reduzido')) {
+        footer = 0;
+    } else {
+        footer = $('footer').innerHeight();
+    }
+
+    $('body.account-login #menuResponsivo ~.container, body.checkout-checkout #menuResponsivo ~.container').css({
+        minHeight: ($(window).innerHeight() - ($('header').innerHeight() + $('#disclaimer').innerHeight())) - (30 + footer)
+    });
+
+    $('body:not(.checkout-checkout) #menuResponsivo ~.container').css({
+        minHeight: ($(window).innerHeight() - ($('header').innerHeight() + footer + $('#disclaimer').innerHeight())) - 30
+    });
+});

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuti Country</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #8B0000;
+            padding: 10px 0;
+            color: white;
+            text-align: center;
+        }
+        nav {
+            background-color: #444;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            margin: 0 10px;
+            text-decoration: none;
+        }
+        .banner {
+            display: flex;
+            overflow: hidden;
+        }
+        .banner img {
+            width: 100%;
+        }
+        .promotions, .featured, .bestsellers, .brands {
+            padding: 20px;
+        }
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+        .product {
+            border: 1px solid #ddd;
+            margin: 10px;
+            padding: 10px;
+            text-align: center;
+            width: calc(25% - 40px);
+        }
+        .product img {
+            max-width: 100%;
+        }
+        footer {
+            background-color: #8B0000;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="logo.png" alt="Tuti Country">
+    <p>Telefones: (44) 9 9929-2404 | (44) 3053-4211</p>
+    <input type="text" placeholder="O que você procura?">
+</header>
+
+<nav>
+    <a href="#">Todos os Produtos</a>
+    <a href="#">Homens</a>
+    <a href="#">Mulheres</a>
+    <a href="#">Crianças</a>
+    <a href="#">Boné</a>
+    <a href="#">Selaria</a>
+    <a href="#">Promoção</a>
+</nav>
+
+<div class="banner">
+    <img src="banner.png" alt="VIMAR 2024">
+</div>
+
+<div class="promotions">
+    <h2>Promoções</h2>
+    <div class="product-grid">
+        <div class="product">
+            <img src="bota1.png" alt="Bota Feminina Vimar Caramelo">
+            <p>Bota Feminina Vimar Caramelo</p>
+            <p>R$ 499,00</p>
+        </div>
+        <div class="product">
+            <img src="bota2.png" alt="Bota Feminina Vimar Caramelo">
+            <p>Bota Feminina Vimar Caramelo</p>
+            <p>R$ 499,00</p>
+        </div>
+        <div class="product">
+            <img src="bota3.png" alt="Bota Feminina Vimar Marfim">
+            <p>Bota Feminina Vimar Marfim</p>
+            <p>R$ 499,00</p>
+        </div>
+        <div class="product">
+            <img src="bota4.png" alt="Bota Feminina Vimar Neon Preto">
+            <p>Bota Feminina Vimar Neon Preto</p>
+            <p>R$ 499,00</p>
+        </div>
+    </div>
+</div>
+
+<div class="featured">
+    <h2>Produtos em Destaque</h2>
+    <div class="product-grid">
+        <div class="product">
+            <img src="jeans1.png" alt="Calça Masculina King Farm">
+            <p>Calça Masculina King Farm</p>
+            <p>R$ 210,00</p>
+        </div>
+        <div class="product">
+            <img src="jeans2.png" alt="Calça Masculina Cinch Green">
+            <p>Calça Masculina Cinch Green</p>
+            <p>R$ 425,00</p>
+        </div>
+        <div class="product">
+            <img src="jeans3.png" alt="Calça Masculina All Hunter">
+            <p>Calça Masculina All Hunter</p>
+            <p>R$ 280,00</p>
+        </div>
+        <div class="product">
+            <img src="jeans4.png" alt="Calça Masculina All Hunter">
+            <p>Calça Masculina All Hunter</p>
+            <p>R$ 240,00</p>
+        </div>
+    </div>
+</div>
+
+<div class="bestsellers">
+    <h2>Mais Vendidos</h2>
+    <div class="product-grid">
+        <div class="product">
+            <img src="jeans5.png" alt="Calça Masculina King Farm">
+            <p>Calça Masculina King Farm</p>
+            <p>R$ 190,00</p>
+        </div>
+        <div class="product">
+            <img src="negociacao.png" alt="Negociação por E-mail">
+            <p>Negociação por E-mail</p>
+            <p>R$ 410,00</p>
+        </div>
+        <div class="product">
+            <img src="bota5.png" alt="Boot Tênis Country">
+            <p>Boot Tênis Country</p>
+            <p>R$ 395,00</p>
+        </div>
+        <div class="product">
+            <img src="jeans6.png" alt="Calça Masculina King Farm">
+            <p>Calça Masculina King Farm</p>
+            <p>R$ 190,00</p>
+        </div>
+    </div>
+</div>
+
+<div class="brands">
+    <h2>Nossas Marcas</h2>
+    <img src="brands.png" alt="Marcas">
+</div>
+
+<footer>
+    <p>Inscreva-se em nossa Newsletter</p>
+    <input type="text" placeholder="Nome completo">
+    <input type="email" placeholder="E-mail">
+    <label><input type="radio" name="gender" value="masculino"> Masculino</label>
+    <label><input type="radio" name="gender" value="feminino"> Feminino</label>
+    <button>Enviar</button>
+    <p>Informações: Quem Somos | Compra Segura | Dúvidas Frequentes | Formas de Pagamentos | Formas de Envio | Trocas e Devoluções | Contato | Mapa do site</p>
+    <p>Empresa: Tuti Country Modas Ltda. - Epp. | CNPJ: 78.825.084/0001-80</p>
+    <p>Endereço: Avenida Paraná, 4488 - Zona 4 | CEP: 87501-030 | Umuarama - Paraná</p>
+    <p>Telefone: (44) 3053-4211 | (44) 9 9929-2404 | E-mail: contato@tuticountry.com.br</p>
+    <p>Copyright © 2024 - Tuti Country Modas Ltda. - Epp. Todos os direitos reservados.</p>
+</footer>
+
+</body>
+</html>
